@@ -2314,6 +2314,10 @@ postgres:
       geometry_type: GEOMETRY
 
       # List of columns, that should be encoded as tile properties (required)
+      #
+      # Keys and values are the names and descriptions of attributes available in this layer.
+      # Each value (description) must be a string that describes the underlying data.
+      # If no fields (=just the geometry) should be encoded, an empty object is allowed.
       properties:
         gid: int4
 
@@ -2634,15 +2638,8 @@ If you want to implement this feature, please see <a href="https://github.com/ma
 <p>We also don’t currently support refreshing the catalog at runtime.
 If you want to implement this feature, please see <a href="https://github.com/maplibre/martin/issues/288">https://github.com/maplibre/martin/issues/288</a> instead.</p>
 </div>
-<h3 id="serving-pmtiles-from-object-storage"><a class="header" href="#serving-pmtiles-from-object-storage">Serving PMTiles from Object Storage</a></h3>
-<p>Next to local files and remote HTTP sources, we support serving PMTiles from object storage.
-All major cloud providers, including AWS S3, Google Cloud Storage, and Azure Blob Storage are supported.
-The providers differ in the options they support.</p>
-<p>To serve PMTiles from a provider, you need to provide the bucket name and the prefix of the object key.
-For example:</p>
-<pre><code class="language-bash">martin  s3://my-bucket/tiles.pmtiles
-</code></pre>
-<p>The available url schemes are:</p>
+<h3 id="serving-pmtiles-from-local-file-systems-http-or-object-storage"><a class="header" href="#serving-pmtiles-from-local-file-systems-http-or-object-storage">Serving PMTiles from local file systems, http or Object Storage</a></h3>
+<p>The settings avaliable for a PMTiles source depend on the backend:</p>
 <div class="mdbook-tabs-container">
 <nav class="mdbook-tabs">
 <button class="mdbook-tab active" data-tabname="local file system">local file system</button>
@@ -2652,64 +2649,45 @@ For example:</p>
 <button class="mdbook-tab" data-tabname="Microsoft Azure">Microsoft Azure</button>
 </nav>
 <div class="mdbook-tab-content" data-tabname="local file system">
+<p>For local sources, you need to provide the path or URL.
+For example:</p>
+<pre><code class="language-bash">martin  path/to/tiles.pmtiles
+</code></pre>
+<p>The available schemes are:</p>
 <ul>
-<li><code>file:///path/to/my/file</code></li>
-<li><code>path/to/my/file</code></li>
+<li><code>file:///path/to/my/file.pmtiles</code></li>
+<li><code>path/to/my/file.pmtiles</code></li>
 </ul>
+<p>You can also configure this via the configuration file:</p>
+<pre><code class="language-yaml">pmtiles:
+  sources:
+    tiles: file:///path/to/my/file.pmtiles
+</code></pre>
 </div>
 <div class="mdbook-tab-content hidden" data-tabname="Http(s)">
+<p>For HTTP(s), you need to provide the url.
+For example:</p>
+<pre><code class="language-bash">martin  https://example.com/tiles.pmtiles
+</code></pre>
+<p>The available url schemes are:</p>
 <ul>
-<li><code>http://mydomain/path</code></li>
-<li><code>https://mydomain/path</code></li>
+<li><code>http://example.com/path.pmtiles</code></li>
+<li><code>https://example.com/path.pmtiles</code></li>
 </ul>
-</div>
-<div class="mdbook-tab-content hidden" data-tabname="Amazon S3">
-<ul>
-<li><code>s3://bucket/path</code></li>
-<li><code>s3a://bucket/path</code></li>
-</ul>
-</div>
-<div class="mdbook-tab-content hidden" data-tabname="Google Cloud Storage">
-<ul>
-<li><code>gs://bucket/path</code></li>
-</ul>
-</div>
-<div class="mdbook-tab-content hidden" data-tabname="Microsoft Azure">
-<ul>
-<li><code>az://account/container/path</code></li>
-<li><code>adl://account/container/path</code></li>
-<li><code>azure://account/container/path</code></li>
-<li><code>abfs://account/container/path</code></li>
-<li><code>abfss://account/container/path</code></li>
-</ul>
-</div>
-</div>
 <p>If you want more control over your requests, you can configure additional options here as such:</p>
 <pre><code class="language-yaml">pmtiles:
   allow_http: true
   sources:
     tiles: s3://bucket/path/to/tiles.pmtiles
 </code></pre>
-<p>The available options depend on the underlying source:</p>
-<div class="mdbook-tabs-container">
-<nav class="mdbook-tabs">
-<button class="mdbook-tab active" data-tabname="local file system">local file system</button>
-<button class="mdbook-tab" data-tabname="Http(s)">Http(s)</button>
-<button class="mdbook-tab" data-tabname="Amazon S3">Amazon S3</button>
-<button class="mdbook-tab" data-tabname="Google Cloud Storage">Google Cloud Storage</button>
-<button class="mdbook-tab" data-tabname="Microsoft Azure">Microsoft Azure</button>
-</nav>
-<div class="mdbook-tab-content" data-tabname="local file system">
-<p>Files don’t currently support additional options.</p>
-</div>
-<div class="mdbook-tab-content hidden" data-tabname="Http(s)">
-<h3 id="security-options"><a class="header" href="#security-options">Security options</a></h3>
+<h3 id="available-http-client-settings"><a class="header" href="#available-http-client-settings">Available http client settings</a></h3>
+<h4 id="security-options"><a class="header" href="#security-options">Security options</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>allow_http</code></td><td>Allow non-TLS, i.e. non-HTTPS connections<br><br><strong>Security warning:</strong><br>If you enable this option, attackers may be able to read the data you request</td><td><code>true</code></td></tr>
 <tr><td><code>allow_invalid_certificates</code></td><td>Skip certificate validation on https connections<br><br><strong>Security warning:</strong><br>You should think very carefully before using this method. If invalid certificates are trusted, any certificate for any site will be trusted for use. This includes expired certificates. This introduces significant vulnerabilities, and should only be used as a last resort or for testing</td><td><code>true</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="connection-options"><a class="header" href="#connection-options">Connection options</a></h3>
+<h4 id="connection-options"><a class="header" href="#connection-options">Connection options</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>user_agent</code></td><td>User-Agent header to be used by this client</td><td><code>martin 1.0.0</code></td></tr>
 <tr><td><code>randomize_addresses</code></td><td>Randomize order addresses that the DNS resolution yields.<br>This will spread the connections across more servers.</td><td><code>true</code></td></tr>
@@ -2725,7 +2703,7 @@ For example:</p>
 <tr><td><code>http2_max_frame_size</code></td><td>Sets the maximum frame size to use for HTTP2.</td><td></td></tr>
 </tbody></table>
 </div>
-<h3 id="proxy-settings"><a class="header" href="#proxy-settings">Proxy settings</a></h3>
+<h4 id="proxy-settings"><a class="header" href="#proxy-settings">Proxy settings</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>proxy_url</code></td><td>HTTP proxy to use for requests</td><td><code>http://proxy.example.com:8080</code></td></tr>
 <tr><td><code>proxy_ca_certificate</code></td><td>PEM-formatted CA certificate for proxy connections</td><td><code>-----BEGIN CERTIFICATE-----</code><br>…<br><code>-----END CERTIFICATE-----</code></td></tr>
@@ -2733,6 +2711,28 @@ For example:</p>
 </tbody></table>
 </div></div>
 <div class="mdbook-tab-content hidden" data-tabname="Amazon S3">
+<div class="mdbook-alerts mdbook-alerts-important">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  important
+</p>
+<p>Even though we name this section <code>Amazon S3</code>, it also works with other providers that support the S3 API, such as <a href="https://www.min.io/">MinIO</a>, <a href="https://docs.ceph.com/en/latest/radosgw/s3/">Ceph</a>, <a href="https://developers.cloudflare.com/r2/">Cloudflare R2</a>, <a href="https://www.hetzner.com/de/storage/object-storage/">hetzner object storage</a> and many more.</p>
+</div>
+<p>For AWS, you need to provide the bucket name and the prefix of the object key.
+For example:</p>
+<pre><code class="language-bash">martin  s3://my-bucket/tiles.pmtiles
+</code></pre>
+<p>The available url schemes are:</p>
+<ul>
+<li><code>s3://bucket/path</code></li>
+<li><code>s3a://bucket/path</code></li>
+</ul>
+<p>If you want more control over your requests, you can configure additional options here as such:</p>
+<pre><code class="language-yaml">pmtiles:
+  allow_http: true
+  sources:
+    tiles: s3://bucket/path/to/tiles.pmtiles
+</code></pre>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -2741,7 +2741,8 @@ For example:</p>
 <p>All settings are also available under the <code>aws_</code> prefix.
 This can be useful if you want to have different cloud providers.</p>
 </div>
-<h3 id="aws-specific-authentication--credentials"><a class="header" href="#aws-specific-authentication--credentials">AWS specific Authentication &amp; Credentials</a></h3>
+<h3 id="available-aws-s3-settings"><a class="header" href="#available-aws-s3-settings">Available AWS S3 settings</a></h3>
+<h4 id="aws-specific-authentication--credentials"><a class="header" href="#aws-specific-authentication--credentials">AWS specific Authentication &amp; Credentials</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>access_key_id</code></td><td>AWS Access Key</td><td><code>AKIAIOSFODNN7EXAMPLE</code></td></tr>
 <tr><td><code>secret_access_key</code></td><td>Secret Access Key</td><td><code>wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY</code></td></tr>
@@ -2752,7 +2753,7 @@ This can be useful if you want to have different cloud providers.</p>
 <tr><td><code>endpoint_url_sts</code></td><td>Custom STS endpoint for web identity token exchange</td><td><code>https://sts.amazonaws.com</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="aws-specific-connection--endpoint-configuration"><a class="header" href="#aws-specific-connection--endpoint-configuration">AWS specific Connection &amp; Endpoint Configuration</a></h3>
+<h4 id="aws-specific-connection--endpoint-configuration"><a class="header" href="#aws-specific-connection--endpoint-configuration">AWS specific Connection &amp; Endpoint Configuration</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>region</code></td><td>AWS region<br>Defaults to <code>us-east-1</code></td><td><code>us-west-2</code></td></tr>
 <tr><td><code>bucket</code><br><code>bucket_name</code></td><td>Bucket name</td><td><code>my-app-bucket</code></td></tr>
@@ -2763,7 +2764,7 @@ This can be useful if you want to have different cloud providers.</p>
 <tr><td><code>container_authorization_token_file</code></td><td>Authorization token file for EKS container creds</td><td><code>/var/run/secrets/eks.amazonaws.com/serviceaccount/token</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="aws-specific-request-behavior--fallbacks"><a class="header" href="#aws-specific-request-behavior--fallbacks">AWS specific Request Behavior &amp; Fallbacks</a></h3>
+<h4 id="aws-specific-request-behavior--fallbacks"><a class="header" href="#aws-specific-request-behavior--fallbacks">AWS specific Request Behavior &amp; Fallbacks</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>imdsv1_fallback</code></td><td>Fall back to IMDSv1 if IMDSv2 is <strong>not supported</strong> (useful for older kube2iam deployments)<br><strong>Security note:</strong> AWS recommends IMDSv2 only; IMDSv1 is vulnerable to <a href="https://aws.amazon.com/blogs/security/defense-in-depth-open-firewalls-reverse-proxies-ssrf-vulnerabilities-ec2-instance-metadata-service/">SSRF attacks</a><br>Has no effect if not using instance credentials</td><td><code>true</code></td></tr>
 <tr><td><code>virtual_hosted_style_request</code></td><td>Use virtual-hosted-style requests instead of path-style<br>Endpoint must match the style<br>Ensures correct bucket addressing for security and routing</td><td><code>true</code></td></tr>
@@ -2774,7 +2775,7 @@ This can be useful if you want to have different cloud providers.</p>
 <tr><td><code>request_payer</code></td><td>Enable S3 Requester Pays</td><td><code>true</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="aws-specific-object-integrity--encryption"><a class="header" href="#aws-specific-object-integrity--encryption">AWS Specific Object Integrity &amp; Encryption</a></h3>
+<h4 id="aws-specific-object-integrity--encryption"><a class="header" href="#aws-specific-object-integrity--encryption">AWS Specific Object Integrity &amp; Encryption</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>checksum</code></td><td>Checksum algorithm for uploads</td><td><code>SHA256</code></td></tr>
 <tr><td><code>server_side_encryption</code></td><td>Type of server-side encryption:<br><code>AES256</code> (SSE-S3)<br><code>aws:kms</code> (SSE-KMS)<br><code>aws:kms:dsse</code> (DSSE-KMS)<br><code>sse-c</code></td><td><code>AES256</code></td></tr>
@@ -2783,13 +2784,13 @@ This can be useful if you want to have different cloud providers.</p>
 <tr><td><code>customer_encryption_key</code></td><td>Base64-encoded 256-bit key for SSE-C</td><td><code>MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="security-options-1"><a class="header" href="#security-options-1">Security options</a></h3>
+<h4 id="security-options-1"><a class="header" href="#security-options-1">Security options</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>allow_http</code></td><td>Allow non-TLS, i.e. non-HTTPS connections<br><br><strong>Security warning:</strong><br>If you enable this option, attackers may be able to read the data you request</td><td><code>true</code></td></tr>
 <tr><td><code>allow_invalid_certificates</code></td><td>Skip certificate validation on https connections<br><br><strong>Security warning:</strong><br>You should think very carefully before using this method. If invalid certificates are trusted, any certificate for any site will be trusted for use. This includes expired certificates. This introduces significant vulnerabilities, and should only be used as a last resort or for testing</td><td><code>true</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="connection-options-1"><a class="header" href="#connection-options-1">Connection options</a></h3>
+<h4 id="connection-options-1"><a class="header" href="#connection-options-1">Connection options</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>user_agent</code></td><td>User-Agent header to be used by this client</td><td><code>martin 1.0.0</code></td></tr>
 <tr><td><code>randomize_addresses</code></td><td>Randomize order addresses that the DNS resolution yields.<br>This will spread the connections across more servers.</td><td><code>true</code></td></tr>
@@ -2805,7 +2806,7 @@ This can be useful if you want to have different cloud providers.</p>
 <tr><td><code>http2_max_frame_size</code></td><td>Sets the maximum frame size to use for HTTP2.</td><td></td></tr>
 </tbody></table>
 </div>
-<h3 id="proxy-settings-1"><a class="header" href="#proxy-settings-1">Proxy settings</a></h3>
+<h4 id="proxy-settings-1"><a class="header" href="#proxy-settings-1">Proxy settings</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>proxy_url</code></td><td>HTTP proxy to use for requests</td><td><code>http://proxy.example.com:8080</code></td></tr>
 <tr><td><code>proxy_ca_certificate</code></td><td>PEM-formatted CA certificate for proxy connections</td><td><code>-----BEGIN CERTIFICATE-----</code><br>…<br><code>-----END CERTIFICATE-----</code></td></tr>
@@ -2813,6 +2814,20 @@ This can be useful if you want to have different cloud providers.</p>
 </tbody></table>
 </div></div>
 <div class="mdbook-tab-content hidden" data-tabname="Google Cloud Storage">
+<p>For Google Cloud, you need to provide the bucket name and the prefix of the object key.
+For example:</p>
+<pre><code class="language-bash">martin  gs://my-bucket/tiles.pmtiles
+</code></pre>
+<p>The available url scheme is:</p>
+<ul>
+<li><code>gs://bucket/path</code></li>
+</ul>
+<p>If you want more control over your requests, you can configure additional options here as such:</p>
+<pre><code class="language-yaml">pmtiles:
+  allow_http: true
+  sources:
+    tiles: gs://bucket/path/to/tiles.pmtiles
+</code></pre>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -2821,55 +2836,23 @@ This can be useful if you want to have different cloud providers.</p>
 <p>All settings are also available under the <code>google_</code> prefix.
 This can be useful if you want to have different cloud providers.</p>
 </div>
-<h3 id="aws-specific-authentication--credentials-1"><a class="header" href="#aws-specific-authentication--credentials-1">AWS specific Authentication &amp; Credentials</a></h3>
+<h3 id="available-google-settings"><a class="header" href="#available-google-settings">Available google settings</a></h3>
+<h4 id="google-specific-configuration"><a class="header" href="#google-specific-configuration">Google specific configuration</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
-<tr><td><code>access_key_id</code></td><td>AWS Access Key</td><td><code>AKIAIOSFODNN7EXAMPLE</code></td></tr>
-<tr><td><code>secret_access_key</code></td><td>Secret Access Key</td><td><code>wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY</code></td></tr>
-<tr><td><code>session_token</code><br><code>token</code></td><td>AWS session token used for temporary credentials</td><td><code>IQoJb3JpZ2luX2VjEOr...</code></td></tr>
-<tr><td><code>web_identity_token_file</code></td><td>Web identity token file path for AssumeRoleWithWebIdentity</td><td><code>/var/run/secrets/eks.amazonaws.com/serviceaccount/token</code></td></tr>
-<tr><td><code>role_arn</code></td><td>Role ARN to assume with web identity token</td><td><code>arn:aws:iam::123456789012:role/MyWebIdentityRole</code></td></tr>
-<tr><td><code>role_session_name</code></td><td>Session name for web identity assumption</td><td><code>my-session</code></td></tr>
-<tr><td><code>endpoint_url_sts</code></td><td>Custom STS endpoint for web identity token exchange</td><td><code>https://sts.amazonaws.com</code></td></tr>
+<tr><td><code>service_account</code><br><code>service_account_path</code></td><td>Path to the service account file</td><td><code>some/path/to/file</code></td></tr>
+<tr><td><code>service_account_key</code></td><td>The serialized service account key</td><td><code>{"private_key": "private_key", "private_key_id": "private_key_id", "client_email":"client_email", "disable_oauth":true}</code></td></tr>
+<tr><td><code>bucket</code><br><code>bucket_name</code></td><td>Bucket name</td><td><code>foobar-abc</code></td></tr>
+<tr><td><code>application_credentials</code></td><td>Set the path to the <a href="https://cloud.google.com/docs/authentication/provide-credentials-adc">application credentials file</a></td><td><code>some/path/to/file</code></td></tr>
+<tr><td><code>skip_signature</code></td><td>Skip signing request</td><td><code>true</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="aws-specific-connection--endpoint-configuration-1"><a class="header" href="#aws-specific-connection--endpoint-configuration-1">AWS specific Connection &amp; Endpoint Configuration</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
-<tr><td><code>region</code></td><td>AWS region<br>Defaults to <code>us-east-1</code></td><td><code>us-west-2</code></td></tr>
-<tr><td><code>bucket</code><br><code>bucket_name</code></td><td>Bucket name</td><td><code>my-app-bucket</code></td></tr>
-<tr><td><code>endpoint</code><br><code>endpoint_url</code></td><td>Custom S3 endpoint<br>Defaults to regional endpoint<br>Ensure consistency with <code>virtual_hosted_style_request</code><br>By default, <strong>only HTTPS schemes are enabled</strong>; enabling HTTP can expose sensitive data<br>Local testing example: <code>"http://localhost:4566"</code></td><td><code>https://s3.us-west-2.amazonaws.com</code></td></tr>
-<tr><td><code>metadata_endpoint</code></td><td>Instance metadata endpoint (IPv4 default <code>http://169.254.169.254</code>)<br>IPv6 alternative: <code>http://fd00:ec2::254</code></td><td><code>http://169.254.169.254</code></td></tr>
-<tr><td><code>container_credentials_relative_uri</code></td><td>ECS container credentials relative URI</td><td><code>/v2/credentials/12345678-1234-1234-1234-123456789012</code></td></tr>
-<tr><td><code>container_credentials_full_uri</code></td><td>EKS container credentials full URI</td><td><code>http://169.254.170.2/v2/credentials/abc123</code></td></tr>
-<tr><td><code>container_authorization_token_file</code></td><td>Authorization token file for EKS container creds</td><td><code>/var/run/secrets/eks.amazonaws.com/serviceaccount/token</code></td></tr>
-</tbody></table>
-</div>
-<h3 id="aws-specific-request-behavior--fallbacks-1"><a class="header" href="#aws-specific-request-behavior--fallbacks-1">AWS specific Request Behavior &amp; Fallbacks</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
-<tr><td><code>imdsv1_fallback</code></td><td>Fall back to IMDSv1 if IMDSv2 is <strong>not supported</strong> (useful for older kube2iam deployments)<br><strong>Security note:</strong> AWS recommends IMDSv2 only; IMDSv1 is vulnerable to <a href="https://aws.amazon.com/blogs/security/defense-in-depth-open-firewalls-reverse-proxies-ssrf-vulnerabilities-ec2-instance-metadata-service/">SSRF attacks</a><br>Has no effect if not using instance credentials</td><td><code>true</code></td></tr>
-<tr><td><code>virtual_hosted_style_request</code></td><td>Use virtual-hosted-style requests instead of path-style<br>Endpoint must match the style<br>Ensures correct bucket addressing for security and routing</td><td><code>true</code></td></tr>
-<tr><td><code>skip_signature</code></td><td>Skip signing request<br><strong>Security warning:</strong> Unsigned requests may expose credentials or allow tampering if endpoint is public</td><td><code>true</code></td></tr>
-<tr><td><code>unsigned_payload</code></td><td>Use unsigned payload option (<code>UNSIGNED-PAYLOAD</code>) instead of signed<br><strong>Impact:</strong> Checksums for request body are not computed in canonical requests, which can reduce integrity guarantees<br>Default is signed payload with checksum</td><td><code>true</code></td></tr>
-<tr><td><code>disable_tagging</code></td><td>Disable tagging objects (useful if unsupported by backend)</td><td><code>true</code></td></tr>
-<tr><td><code>s3_express</code></td><td>Enable S3 Express One Zone</td><td><code>true</code></td></tr>
-<tr><td><code>request_payer</code></td><td>Enable S3 Requester Pays</td><td><code>true</code></td></tr>
-</tbody></table>
-</div>
-<h3 id="aws-specific-object-integrity--encryption-1"><a class="header" href="#aws-specific-object-integrity--encryption-1">AWS Specific Object Integrity &amp; Encryption</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
-<tr><td><code>checksum</code></td><td>Checksum algorithm for uploads</td><td><code>SHA256</code></td></tr>
-<tr><td><code>server_side_encryption</code></td><td>Type of server-side encryption:<br><code>AES256</code> (SSE-S3)<br><code>aws:kms</code> (SSE-KMS)<br><code>aws:kms:dsse</code> (DSSE-KMS)<br><code>sse-c</code></td><td><code>AES256</code></td></tr>
-<tr><td><code>kms_key_id</code></td><td>KMS Key ID for SSE-KMS or DSSE-KMS</td><td><code>arn:aws:kms:us-east-1:123456789012:key/abcd-1234-efgh-5678</code></td></tr>
-<tr><td><code>bucket_key_enabled</code></td><td>Use bucket’s default KMS key (<code>true</code>/<code>false</code>)</td><td><code>true</code></td></tr>
-<tr><td><code>customer_encryption_key</code></td><td>Base64-encoded 256-bit key for SSE-C</td><td><code>MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=</code></td></tr>
-</tbody></table>
-</div>
-<h3 id="security-options-2"><a class="header" href="#security-options-2">Security options</a></h3>
+<h4 id="security-options-2"><a class="header" href="#security-options-2">Security options</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>allow_http</code></td><td>Allow non-TLS, i.e. non-HTTPS connections<br><br><strong>Security warning:</strong><br>If you enable this option, attackers may be able to read the data you request</td><td><code>true</code></td></tr>
 <tr><td><code>allow_invalid_certificates</code></td><td>Skip certificate validation on https connections<br><br><strong>Security warning:</strong><br>You should think very carefully before using this method. If invalid certificates are trusted, any certificate for any site will be trusted for use. This includes expired certificates. This introduces significant vulnerabilities, and should only be used as a last resort or for testing</td><td><code>true</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="connection-options-2"><a class="header" href="#connection-options-2">Connection options</a></h3>
+<h4 id="connection-options-2"><a class="header" href="#connection-options-2">Connection options</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>user_agent</code></td><td>User-Agent header to be used by this client</td><td><code>martin 1.0.0</code></td></tr>
 <tr><td><code>randomize_addresses</code></td><td>Randomize order addresses that the DNS resolution yields.<br>This will spread the connections across more servers.</td><td><code>true</code></td></tr>
@@ -2885,7 +2868,7 @@ This can be useful if you want to have different cloud providers.</p>
 <tr><td><code>http2_max_frame_size</code></td><td>Sets the maximum frame size to use for HTTP2.</td><td></td></tr>
 </tbody></table>
 </div>
-<h3 id="proxy-settings-2"><a class="header" href="#proxy-settings-2">Proxy settings</a></h3>
+<h4 id="proxy-settings-2"><a class="header" href="#proxy-settings-2">Proxy settings</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>proxy_url</code></td><td>HTTP proxy to use for requests</td><td><code>http://proxy.example.com:8080</code></td></tr>
 <tr><td><code>proxy_ca_certificate</code></td><td>PEM-formatted CA certificate for proxy connections</td><td><code>-----BEGIN CERTIFICATE-----</code><br>…<br><code>-----END CERTIFICATE-----</code></td></tr>
@@ -2893,6 +2876,24 @@ This can be useful if you want to have different cloud providers.</p>
 </tbody></table>
 </div></div>
 <div class="mdbook-tab-content hidden" data-tabname="Microsoft Azure">
+<p>For Azure, you need to provide the account name, container and path.
+For example:</p>
+<pre><code class="language-bash">martin  az://account/container.pmtiles
+</code></pre>
+<p>The available url schemes are:</p>
+<ul>
+<li><code>az://account/container/path.pmtiles</code></li>
+<li><code>adl://account/container/path.pmtiles</code></li>
+<li><code>azure://account/container/path.pmtiles</code></li>
+<li><code>abfs://account/container/path.pmtiles</code></li>
+<li><code>abfss://account/container/path.pmtiles</code></li>
+</ul>
+<p>If you want more control over your requests, you can configure additional options here as such:</p>
+<pre><code class="language-yaml">pmtiles:
+  allow_http: true
+  sources:
+    tiles: az://account/container/path.pmtiles
+</code></pre>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -2901,7 +2902,8 @@ This can be useful if you want to have different cloud providers.</p>
 <p>All settings are also available under the <code>azure_</code> prefix.
 This can be useful if you want to have different cloud providers.</p>
 </div>
-<h3 id="azure-specific-authentication--credentials"><a class="header" href="#azure-specific-authentication--credentials">Azure specific Authentication &amp; Credentials</a></h3>
+<h3 id="available-azure-settings"><a class="header" href="#available-azure-settings">Available azure settings</a></h3>
+<h4 id="azure-specific-authentication--credentials"><a class="header" href="#azure-specific-authentication--credentials">Azure specific Authentication &amp; Credentials</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>account_name</code></td><td>Name of the Azure Storage account</td><td><code>myaccount</code></td></tr>
 <tr><td><code>access_key</code><br><code>account_key</code><br><code>master_key</code></td><td>Master key for accessing the storage account<br><br><strong>Security note:</strong><br> Keep this key secret; anyone with access can read/write all data in the account</td><td><code>abcd1234efgh5678ijkl9012mnop3456qrst7890uvwx1234yzab5678cdef9012</code></td></tr>
@@ -2918,7 +2920,7 @@ This can be useful if you want to have different cloud providers.</p>
 <tr><td><code>use_azure_cli</code></td><td>Use Azure CLI for acquiring access token</td><td><code>true</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="azure-specific-connection--endpoint-configuration"><a class="header" href="#azure-specific-connection--endpoint-configuration">Azure specific Connection &amp; Endpoint Configuration</a></h3>
+<h4 id="azure-specific-connection--endpoint-configuration"><a class="header" href="#azure-specific-connection--endpoint-configuration">Azure specific Connection &amp; Endpoint Configuration</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>endpoint</code></td><td>Override endpoint used to communicate with blob storage</td><td><code>https://myaccount.blob.core.windows.net</code></td></tr>
 <tr><td><code>object_store_use_emulator</code><br><code>use_emulator</code></td><td>Use Azurite storage emulator</td><td><code>true</code></td></tr>
@@ -2926,7 +2928,7 @@ This can be useful if you want to have different cloud providers.</p>
 <tr><td><code>container_name</code></td><td>Container name in the storage account</td><td><code>mycontainer</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="azure-specific-request-behavior--security-options"><a class="header" href="#azure-specific-request-behavior--security-options">Azure specific Request Behavior &amp; Security Options</a></h3>
+<h4 id="azure-specific-request-behavior--security-options"><a class="header" href="#azure-specific-request-behavior--security-options">Azure specific Request Behavior &amp; Security Options</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>skip_signature</code></td><td>Skip signing requests<br><br><strong>Security warning:</strong><br> Unsigned requests may expose sensitive data or allow tampering; use only in secure or local environments</td><td><code>true</code></td></tr>
 <tr><td><code>disable_tagging</code></td><td>Disable object tagging (useful if backend does not support it)</td><td><code>true</code></td></tr>
@@ -2936,13 +2938,13 @@ This can be useful if you want to have different cloud providers.</p>
 <tr><td><code>fabric_cluster_identifier</code></td><td>Identifier for Fabric cluster</td><td><code>fabric-cluster-01</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="security-options-3"><a class="header" href="#security-options-3">Security options</a></h3>
+<h4 id="security-options-3"><a class="header" href="#security-options-3">Security options</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>allow_http</code></td><td>Allow non-TLS, i.e. non-HTTPS connections<br><br><strong>Security warning:</strong><br>If you enable this option, attackers may be able to read the data you request</td><td><code>true</code></td></tr>
 <tr><td><code>allow_invalid_certificates</code></td><td>Skip certificate validation on https connections<br><br><strong>Security warning:</strong><br>You should think very carefully before using this method. If invalid certificates are trusted, any certificate for any site will be trusted for use. This includes expired certificates. This introduces significant vulnerabilities, and should only be used as a last resort or for testing</td><td><code>true</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="connection-options-3"><a class="header" href="#connection-options-3">Connection options</a></h3>
+<h4 id="connection-options-3"><a class="header" href="#connection-options-3">Connection options</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>user_agent</code></td><td>User-Agent header to be used by this client</td><td><code>martin 1.0.0</code></td></tr>
 <tr><td><code>randomize_addresses</code></td><td>Randomize order addresses that the DNS resolution yields.<br>This will spread the connections across more servers.</td><td><code>true</code></td></tr>
@@ -2958,7 +2960,7 @@ This can be useful if you want to have different cloud providers.</p>
 <tr><td><code>http2_max_frame_size</code></td><td>Sets the maximum frame size to use for HTTP2.</td><td></td></tr>
 </tbody></table>
 </div>
-<h3 id="proxy-settings-3"><a class="header" href="#proxy-settings-3">Proxy settings</a></h3>
+<h4 id="proxy-settings-3"><a class="header" href="#proxy-settings-3">Proxy settings</a></h4>
 <div class="table-wrapper"><table><thead><tr><th>configuration</th><th>description</th><th>example</th></tr></thead><tbody>
 <tr><td><code>proxy_url</code></td><td>HTTP proxy to use for requests</td><td><code>http://proxy.example.com:8080</code></td></tr>
 <tr><td><code>proxy_ca_certificate</code></td><td>PEM-formatted CA certificate for proxy connections</td><td><code>-----BEGIN CERTIFICATE-----</code><br>…<br><code>-----END CERTIFICATE-----</code></td></tr>
@@ -3244,21 +3246,22 @@ a suitable signature.</p>
 <tr><td><code>query</code> (optional, any name)</td><td>json</td><td>Query string parameters</td></tr>
 </tbody></table>
 </div>
-<h3 id="simple-function"><a class="header" href="#simple-function">Simple Function</a></h3>
-<p>For example, if you have a table <code>table_source</code> in WGS84 (<code>4326</code> SRID), then you can use this function as a Function
-Source:</p>
+<h3 id="simple-function-with-coordinate-projection"><a class="header" href="#simple-function-with-coordinate-projection">Simple Function with coordinate projection</a></h3>
+<p>For example, if you have a table with arbitrary geometry <code>table_source</code> in WGS84 (<code>4326</code> SRID).
+If we need the tables’ row <code>field_color</code> and geometry <code>geom</code> as a function source, then it can be written as:</p>
 <pre><code class="language-sql  ignore">CREATE OR REPLACE
-    FUNCTION function_zxy_query(z integer, x integer, y integer)
+    FUNCTION function_zxy(z integer, x integer, y integer)
     RETURNS bytea AS $$
 DECLARE
   mvt bytea;
 BEGIN
-  SELECT INTO mvt ST_AsMVT(tile, 'function_zxy_query', 4096, 'geom') FROM (
+  SELECT INTO mvt ST_AsMVT(tile, 'function_zxy', 4096, 'geom') FROM (
     SELECT
       ST_AsMVTGeom(
           ST_Transform(ST_CurveToLine(geom), 3857),
           ST_TileEnvelope(z, x, y),
-          4096, 64, true) AS geom
+          4096, 64, true) AS geom,
+        field_color AS color
     FROM table_source
     WHERE geom &amp;&amp; ST_Transform(ST_TileEnvelope(z, x, y), 4326)
   ) as tile WHERE geom IS NOT NULL;
@@ -3267,32 +3270,88 @@ BEGIN
 END
 $$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
 </code></pre>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>By default, <a href="https://postgis.net/docs/ST_TileEnvelope.html"><code>ST_TileEnvelope</code></a> produces <code>3857</code> SRID and <a href="https://postgis.net/docs/ST_AsMVTGeom.html"><code>ST_AsMVTGeom</code></a> consumes <code>3857</code> SRID.
+Many tooling (for example <a href="https://osm2pgsql.org/"><code>osm2pgsql</code></a>) thus directly store their data in <code>3857</code> SRID for lower processing overhead.
+If your data is in <code>3857</code> SRID, you can remove the two <code>ST_Transform</code> calls.</p>
+</div>
+<p>Lets explain a few of the aspects of the function:</p>
+<p><code>ST_Transform(ST_CurveToLine(geom), 3857)</code></p>
+<ul>
+<li>Since the table in the example can contain arbitrary geometries, we need to transform <code>CIRCULARSTRING</code> geometry types.
+Concretely, we use <code>ST_CurveToLine</code> to convert a
+<ul>
+<li>CIRCULAR STRING to regular LINESTRING,</li>
+<li>CURVEPOLYGON to POLYGON or</li>
+<li>MULTISURFACE to MULTIPOLYGON.</li>
+</ul>
+</li>
+<li><code>ST_Transform</code> is necessary as <code>ST_CurveToLine</code> returns a geometry in <code>4326</code> SRID, which is the SRID of stored geometry in the example.</li>
+</ul>
+<p><code>WHERE geom &amp;&amp; ST_Transform(ST_TileEnvelope(z, x, y), 4326)</code></p>
+<ul>
+<li><code>&amp;&amp;</code> is the spatial intersection operator. Thus it checks if the geometry intersects with the tile envelope and uses spatial indexes.</li>
+<li><code>ST_Transform</code> is used to transform the tile envelope from <code>3857</code> SRID to <code>4326</code> SRID, as <code>geom</code> in our example is in <code>4326</code> SRID.</li>
+</ul>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>The planning mode <code>IMMUTABLE STRICT PARALLEL SAFE</code> allows postgres further freedom to optimize our function.
+Your function is likely to be the same category as the example, but be careful to not cause unexpected behavior.</p>
+<ul>
+<li>
+<p><a href="https://www.postgresql.org/docs/current/sql-createfunction.html#:~:text=existing%20function%20definition.-,IMMUTABLE,-STABLE%0AVOLATILE"><code>IMMUTABLE</code></a>
+The function does not have side effects.</p>
+<blockquote>
+<p>Indicates that the function cannot modify the database and always returns the same result when given the same argument values;
+that is, it does not do database lookups or otherwise use information not directly present in its argument list.
+If this option is given, any call of the function with all-constant arguments can be immediately replaced with the function value.</p>
+</blockquote>
+</li>
+<li>
+<p><code>STRICT</code>: Our function will not be called if any of the arguments are <code>NULL</code>.</p>
+</li>
+<li>
+<p><a href="https://www.postgresql.org/docs/current/parallel-safety.html"><code>PARALLEL SAFE</code></a>:
+Our function is safe to call in parallel as it does not modify the database, nor use randomness or temporary tables.</p>
+<blockquote>
+<p>Functions should be labeled parallel unsafe if they</p>
+<ul>
+<li>modify any database state,</li>
+<li>change the transaction state (other than by using a subtransaction for error recovery),</li>
+<li>access sequences (e.g., by calling currval) or</li>
+<li>make persistent changes to settings.</li>
+</ul>
+<p>They should be labeled parallel restricted if they</p>
+<ul>
+<li>access temporary tables,</li>
+<li>client connection state,</li>
+<li>cursors,</li>
+<li>prepared statements, or</li>
+<li>miscellaneous backend-local state which the system cannot synchronize in parallel mode
+(e.g., setseed cannot be executed other than by the group leader because a change made by another process
+would not be reflected in the leader).</li>
+</ul>
+<p>In general, if a function is labeled as being safe when it is restricted or unsafe, or if it is labeled as being restricted
+when it is in fact unsafe, it may throw errors or produce wrong answers when used in a parallel query.
+C-language functions could in theory exhibit totally undefined behavior if mislabeled, since there is no way for the system
+to protect itself against arbitrary C code, but in most likely cases the result will be no worse than for any other function.
+If in doubt, functions should be labeled as UNSAFE, which is the default.</p>
+</blockquote>
+</li>
+</ul>
+</div>
 <h3 id="function-with-query-parameters"><a class="header" href="#function-with-query-parameters">Function with Query Parameters</a></h3>
 <p>Users may add a <code>query</code> parameter to pass additional parameters to the function.</p>
-<p><em><strong>TODO</strong>: Modify this example to actually use the query parameters.</em></p>
-<pre><code class="language-sql  ignore">CREATE OR REPLACE
-    FUNCTION function_zxy_query(z integer, x integer, y integer, query_params json)
-    RETURNS bytea AS $$
-DECLARE
-  mvt bytea;
-BEGIN
-  SELECT INTO mvt ST_AsMVT(tile, 'function_zxy_query', 4096, 'geom') FROM (
-    SELECT
-      ST_AsMVTGeom(
-          ST_Transform(ST_CurveToLine(geom), 3857),
-          ST_TileEnvelope(z, x, y),
-          4096, 64, true) AS geom
-    FROM table_source
-    WHERE geom &amp;&amp; ST_Transform(ST_TileEnvelope(z, x, y), 4326)
-  ) as tile WHERE geom IS NOT NULL;
-
-  RETURN mvt;
-END
-$$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
-</code></pre>
 <p>The <code>query_params</code> argument is a JSON representation of the tile request query params. Query params could be passed as
 simple query values, e.g.</p>
-<pre><code class="language-bash">curl localhost:3000/function_zxy_query/0/0/0?token=martin
+<pre><code class="language-bash">curl localhost:3000/function_zxy_query/0/0/0?answer=42
 </code></pre>
 <p>You can also
 use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent">urlencoded</a>
@@ -3317,12 +3376,35 @@ params to encode complex values:</p>
 <p>You can access this params using <a href="https://www.postgresql.org/docs/current/functions-json.html">json operators</a>:</p>
 <pre><code class="language-sql  ignore">...WHERE answer = (query_params-&gt;'objectParam'-&gt;&gt;'answer')::int;
 </code></pre>
+<p>As an example, our <code>table_source</code> in WGS84 (<code>4326</code> SRID) has a column <code>answer</code> of type <code>integer</code>.
+The function <code>function_zxy_query</code> will return a MVT tile with the <code>answer</code> column as a property.</p>
+<pre><code class="language-sql  ignore">CREATE OR REPLACE
+    FUNCTION function_zxy_query(z integer, x integer, y integer, query_params json)
+    RETURNS bytea AS $$
+DECLARE
+  mvt bytea;
+BEGIN
+  SELECT INTO mvt ST_AsMVT(tile, 'function_zxy_query', 4096, 'geom') FROM (
+    SELECT
+      ST_AsMVTGeom(
+          ST_Transform(ST_CurveToLine(geom), 3857),
+          ST_TileEnvelope(z, x, y),
+          4096, 64, true) AS geom
+    FROM table_source
+    WHERE geom &amp;&amp; ST_Transform(ST_TileEnvelope(z, x, y), 4326) AND
+          answer = (query_params-&gt;&gt;'answer')::int
+  ) as tile WHERE geom IS NOT NULL;
+
+  RETURN mvt;
+END
+$$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
+</code></pre>
 <h3 id="modifying-tilejson-1"><a class="header" href="#modifying-tilejson-1">Modifying TileJSON</a></h3>
 <p>Martin will automatically generate a basic <a href="https://github.com/mapbox/tilejson-spec">TileJSON</a> manifest for each
-function source that will contain the name and description of the function, plus optionally <code>minzoom</code>, <code>maxzoom</code>,
-and <code>bounds</code> (if they were specified via one of the configuration methods). For example, if there is a
-function <code>public.function_zxy_query_jsonb</code>, the default <code>TileJSON</code> might look like this (note that URL will be
-automatically adjusted to match the request host):</p>
+function source.
+This will contain the <code>name</code> and <code>description</code> of the function, plus optionally <code>minzoom</code>, <code>maxzoom</code>, and <code>bounds</code>
+(if they were specified via one of the configuration methods).</p>
+<p>For example, if there is a function <code>public.function_zxy_query_jsonb</code>, the default <code>TileJSON</code> might look like this:</p>
 <pre><code class="language-json">{
   "tilejson": "3.0.0",
   "tiles": [
@@ -3332,12 +3414,26 @@ automatically adjusted to match the request host):</p>
   "description": "public.function_zxy_query_jsonb"
 }
 </code></pre>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>The URL will be automatically adjusted to match the request host</p>
+</div>
 <h4 id="tilejson-in-sql-comments-1"><a class="header" href="#tilejson-in-sql-comments-1">TileJSON in SQL Comments</a></h4>
-<p>To modify automatically generated <code>TileJSON</code>, you can add a valid JSON as an SQL comment on the function. Martin will
-merge function comment into the generated <code>TileJSON</code> using <a href="https://www.rfc-editor.org/rfc/rfc7386">JSON Merge patch</a>.
+<p>To modify automatically generated <code>TileJSON</code>, you can add a valid JSON as an SQL comment on the function.
+Martin will merge function comment into the generated <code>TileJSON</code> using <a href="https://www.rfc-editor.org/rfc/rfc7386">JSON Merge patch</a>.
 The following example adds <code>attribution</code> and <code>version</code> fields to the <code>TileJSON</code>.</p>
-<p><strong>Note:</strong> This example uses <code>EXECUTE</code> to ensure that the comment is a valid JSON (or else PostgreSQL will throw an
-error). You can use other methods of creating SQL comments.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>This example uses <code>EXECUTE</code> to ensure that the comment is a valid JSON
+(or else PostgreSQL will throw an error).
+You can use other methods of creating SQL comments.</p>
+</div>
 <pre><code class="language-sql">DO $do$ BEGIN
     EXECUTE 'COMMENT ON FUNCTION my_function_name IS $tj$' || $$
     {
@@ -3717,8 +3813,27 @@ but in the future, we may optimise Martin which may result in additional restric
 <p>Changes or removals of styles are reflected immediately, but additions are not.
 A restart of Martin is required to see new styles.</p>
 <h3 id="server-side-raster-tile-rendering"><a class="header" href="#server-side-raster-tile-rendering">Server-side raster tile rendering</a></h3>
-<p>This is not implemented yet, but there is a plan to add it.
-Please see <a href="https://github.com/maplibre/martin/issues/978">https://github.com/maplibre/martin/issues/978</a> for more information.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>This feature is currently marked as unstable/experimental and thus not included in the default build.
+The behaviour on this endpoint may change in patch releases.</p>
+<p>To enable it, build Martin with the <code>--features=unstable-rendering</code> flag after installing the nessesary dependencys via <code>just install-dependencies</code>.</p>
+<p>It is experimental due to the limitations of our current implementation:</p>
+<ul>
+<li>Rendering support is currently only available on Linux.
+To add support for macOS/Windows, please see <a href="https://github.com/maplibre/maplibre-native-rs">https://github.com/maplibre/maplibre-native-rs</a>.</li>
+<li>Currently, martin does not cache style rendered requests and</li>
+<li>does not support concurrency for this feature.</li>
+</ul>
+</div>
+<p>We support generating a rasterised image for an XYZ tile of a given style.
+Use the <code>/style/&lt;style_id&gt;/{z}/{x}/{y}.{filetype}</code> API to get a <code>&lt;style_id&gt;</code>’s rendered png/jpeg content.</p>
+<h3 id="static-image-prepraration"><a class="header" href="#static-image-prepraration">Static image prepraration</a></h3>
+<p>We currently do not have the same <a href="https://tileserver.readthedocs.io/en/latest/endpoints.html#static-images">capabilites as Tileserver-GL</a> to layout images.
+We are working on adding this feature and are very open to contributions.</p>
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -5849,19 +5964,19 @@ mbtiles summary target/world_cities.mbtiles
 
 MBTiles file summary for tests/fixtures/mbtiles/world_cities.mbtiles
 Schema: flat
-File size: 48.00KiB
-Page size: 4.00KiB
+File size: 48.00kB
+Page size: 4.00kB
 Page count: 12
 
  Zoom |   Count   | Smallest  |  Largest  |  Average  | Bounding Box
-    0 |         1 |    1.0KiB |    1.0KiB |    1.0KiB | -180,-85,180,85
+    0 |         1 |     1.0kB |     1.0kB |    1.0kB | -180,-85,180,85
     1 |         4 |      160B |      650B |      366B | -180,-85,180,85
     2 |         7 |      137B |      495B |      239B | -180,-67,180,67
     3 |        17 |       67B |      246B |      134B | -135,-41,180,67
     4 |        38 |       64B |      175B |       86B | -135,-41,180,67
     5 |        57 |       64B |      107B |       72B | -124,-41,180,62
     6 |        72 |       64B |       97B |       68B | -124,-41,180,62
-  all |       196 |       64B |    1.0KiB |       96B | -180,-85,180,85
+  all |       196 |       64B |     1.0kB |       96B | -180,-85,180,85
 </code></pre>
 <h2 id="meta-all"><a class="header" href="#meta-all">meta-all</a></h2>
 <p>Print all metadata values to stdout, as well as the results of tile detection. The format of the values printed is not
